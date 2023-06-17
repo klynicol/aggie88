@@ -60,6 +60,7 @@ class LinkTreeLinkController extends Controller
       return $this->response->setJSON([
          'status' => 'success',
          'message' => 'Link deleted',
+         'data' => $id
       ]);
    }
 }

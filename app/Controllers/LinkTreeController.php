@@ -31,6 +31,9 @@ class LinkTreeController extends Controller
    {
       $linkTree = new LinkTreeDataEntity();
       $request = $this->request->getPost();
+      // header('Content-Type: application/json');
+      // echo json_encode($request);
+      // die();
       $userId = session()->get('id');
       $linkTreeId = $request['linktree_id'];
 

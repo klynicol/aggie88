@@ -104,6 +104,7 @@
       links.forEach((link, index) => {
          $('.link_wrapper').append(renderLink(link, index));
       });
+      addListeners();
    });
 
    $('#show_add_link_modal').on('click', (e) => {
@@ -131,13 +132,16 @@
       $('.delete').on('click', (e) => {
          e.preventDefault();
          const linkId = $(e.target).closest('.link_container').data('link-id');
-         const linkIndex = findLinkIndex(linkId);
-         $.delete(`/linktree/link/${linkId}`, (response) => {
-            console.log(response);
-            $(e.target).closest('.link_container').remove();
-            links.splice(linkIndex, 1);
+         $.ajax({
+            url: `/linktree/link/${linkId}`,
+            type: 'DELETE',
+            success: (response) => {
+               console.log(response);
+               const linkIndex = findLinkIndex(linkId);
+               $(`.link_container[data-link-id="${linkId}"]`).remove();
+               links.splice(linkIndex, 1);
+            }
          });
-
       });
    }
 

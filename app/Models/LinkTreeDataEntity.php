@@ -85,8 +85,12 @@ class LinkTreeDataEntity
 
    public function updateLink($linkId, $linkData)
    {
-      if (!empty($linkData['icon'])) {
-         $linkData['icon'] = $this->saveLinkTreeImage("links.{$linkId}.{$linkData['icon']}");
+      log_message('debug', json_encode($linkData));
+
+      $newIcon = $this->saveLinkImage($linkId);
+      if($newIcon !== null) {
+         $this->deleteLinkImage($linkId);
+         $linkData['icon'] = $newIcon;
       }
 
       if (isset($this->data['links'][$linkId])) {
@@ -99,35 +103,46 @@ class LinkTreeDataEntity
    public function deleteLink($linkId)
    {
       if (isset($this->data['links'][$linkId])) {
-         $link = $this->data['links'][$linkId];
-         if (!empty($link['icon'])) {
-            unlink($this->imageDir . $this->linkTreeId . '/' . $link['icon']);
-         }
+         $this->deleteLinkImage($linkId);
          unset($this->data['links'][$linkId]);
       }
    }
 
-   private function saveLinkTreeImage($requestImageName)
+   private function saveLinkImage($linkId)
    {
       $path = $this->imageDir . $this->linkTreeId;
+
+      $request = Services::request();
+      $files = $request->getFiles();
+      if(isset($files['links'][$linkId]['icon'])){
+         $file = $files['links'][$linkId]['icon'];
+      } else {
+         return null;
+      }
+
+      if (!$file->isValid()
+         || (!$file->isValid() && $file->getError() !== UPLOAD_ERR_NO_FILE)) {
+         log_message('error', $file->getErrorString());
+         return null;
+      }
 
       // Create the image directory if it doesn't exist
       if (!is_dir($path)) {
          mkdir($path);
       }
 
-      $request = Services::request();
-      $file = $request->getFile($requestImageName);
-      if (!$file->isValid()) {
-         log_message('error', $file->getErrorString());
-         return '';
-      }
-
       $randomName = random_string('nozero', 15);
       $fileName = $randomName . '.' . $file->getExtension();
       $file->move($path, $fileName, true);
 
-      return $fileName;
+      return 'images/lt/' . $this->linkTreeId . '/' . $fileName;
+   }
+
+   private function deleteLinkImage($linkId)
+   {
+      if(!empty($this->data['links'][$linkId]['icon'])) {
+         @unlink(ROOTPATH . 'public/' . $this->data['links'][$linkId]['icon']);
+      }
    }
 
    public function save()
