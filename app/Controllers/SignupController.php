@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Models\LinkTreeModel;
 use CodeIgniter\Controller;
 use App\Models\UserModel;
 
@@ -35,6 +36,17 @@ class SignupController extends Controller
             'updated_at' => date('Y-m-d H:i:s'),
          ];
          $userModel->save($data);
+
+         // Create the first link tree for this user.
+         // There are no other ways linktrees are created so each user will only have one for now
+         (new LinkTreeModel())->save([
+            'user_id' => $userModel->getInsertID(),
+            'title' => 'My Linktree',
+            // added ability to make linktree url's unique later if we want
+            'url' => $userModel->getInsertID(),
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
+         ]);
 
          // @todo: send email verification
          

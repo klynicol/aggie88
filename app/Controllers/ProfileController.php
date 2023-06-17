@@ -2,21 +2,18 @@
 
 namespace App\Controllers;
 
-use App\Models\UserModel;
 use CodeIgniter\Controller;
 
 class ProfileController extends Controller
 {
    public function index()
    {
-      $session = session();
-      echo "Hello : " . $session->get('name');
+      // @todo: view user profile page
    }
 
    public function logout()
    {
-      $session = session();
-      $session->destroy();
+      session()->destroy();
       return redirect()->to('/signin');
    }
 

@@ -130,3 +130,7 @@ nb-configuration.xml
 # SQLite files
 *.sqlite
 
+
+#linktrees
+writeable/linktrees/*
+

@@ -1,5 +1,5 @@
 <?php 
-namespace App\Models;  
+namespace App\Models;
   
 class UserModel extends BaseModel{
     protected $table = 'users';

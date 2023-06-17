@@ -10,6 +10,10 @@ class SigninController extends Controller
    public function index()
    {
       helper(['form']);
+      if(session()->get('isLoggedIn'))
+      {
+         return redirect()->to('/profile');
+      }
       echo view('signin');
    }
 
