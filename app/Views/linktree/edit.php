@@ -10,8 +10,15 @@
 <div style="max-width: 900px;" class="mx-auto">
    <h2 class="my-3 text-center">Edit Your Link Tree</h2>
 
-   <form action="/linktree/save" method="POST">
+   <?php if (session()->getFlashdata('msg')) : ?>
+      <div class="alert alert-warning">
+         <?= session()->getFlashdata('msg') ?>
+      </div>
+   <?php endif; ?>
+
+   <form action="/linktree/save" method="POST" enctype="multipart/form-data">
       <input type="hidden" name="linktree_id" value="<?= $linktreeId; ?>">
+      <input type="hidden" name="avatar" value="<?= $linktree['avatar']; ?>">
 
       <div class="text-center">
          <div style="width: 350px;" class="btn-group" role="group" aria-label="Basic mixed styles example">
@@ -23,13 +30,13 @@
       <!-- Avatar Upload -->
       <div class="mb-3">
          <label for="avatar" class="form-label font-b">Avatar</label>
-         <input class="form-control form-control-sm" name="avatar" id="avatar" type="file">
+         <input class="form-control form-control-sm" name="avatar_upload" id="avatar" type="file">
       </div>
 
       <!-- Tagline -->
       <div class="mb-3">
          <label for="tagline" class="form-label font-b">Tagline</label>
-         <input type="text" class="form-control" id="tagline" name="tageline" value="<?= $linktree['tagline']; ?>">
+         <input type="text" class="form-control" id="tagline" name="tagline" value="<?= $linktree['tagline']; ?>">
       </div>
 
       <!-- Social Links -->
@@ -39,8 +46,7 @@
             <label for="<?= $socialKey; ?>" class="col-sm-2 col-form-label"><?= ucfirst($socialKey); ?></label>
             <div class="col-sm-10">
                <?php $value = $linktree['social'][$socialKey] ?? null; ?>
-               <input type="text" class="form-control" name="social[<?= $socialKey; ?>]" 
-                  id="<?= $socialKey; ?>" value="<?= $value; ?>">
+               <input type="text" class="form-control" name="social[<?= $socialKey; ?>]" id="<?= $socialKey; ?>" value="<?= $value; ?>">
             </div>
          <?php endforeach; ?>
       </div>
@@ -82,7 +88,17 @@
 
 <script>
    let links = <?= json_encode($linktree['links']); ?>;
-   console.log(links);
+   // Convert object to array
+   links = Object.keys(links).map((key) => {
+      const link = links[key];
+      return link;
+   });
+   
+   function findLinkIndex(linkId) {
+      return links.findIndex((link) => {
+         return link.id === linkId;
+      });
+   }
 
    $(document).ready(() => {
       links.forEach((link, index) => {
@@ -100,30 +116,32 @@
 
    $('#add_link_button').on('click', (e) => {
       e.preventDefault();
-      let linkType = $('.link_option_select').val();
-      let link = {
-         type: linkType,
-         url: '',
-         clicks: 0,
-      };
-      links.push(link);
-      $('.link_wrapper').append(renderLink(link, links.length - 1));
-      addListeners();
-      $('.modal').modal('hide');
+      const linkType = $('.link_option_select').val();
+      $.get(`/linktree/link/new?type=${linkType}`, (response) => {
+         console.log(response);
+         links.push(response.data);
+         $('.link_wrapper').append(renderLink(response.data, links.length - 1));
+         addListeners();
+         $('.modal').modal('hide');
+      });
    });
 
 
    function addListeners() {
       $('.delete').on('click', (e) => {
          e.preventDefault();
-         let linkIndex = $(e.target).closest('.link_container').data('link-index');
-         links.splice(linkIndex, 1);
-         $(e.target).closest('.link_container').remove();
+         const linkId = $(e.target).closest('.link_container').data('link-id');
+         const linkIndex = findLinkIndex(linkId);
+         $.delete(`/linktree/link/${linkId}`, (response) => {
+            console.log(response);
+            $(e.target).closest('.link_container').remove();
+            links.splice(linkIndex, 1);
+         });
+
       });
    }
 
-   function renderLink(link, index)
-   {
+   function renderLink(link, index) {
       if (link.type === 'video') {
          return renderVideoLink(link, index);
       }
@@ -133,19 +151,18 @@
 
    function renderStandardLink(link, index) {
       return `
-         <div class="mb-3 p-4 border border-1 link_container" data-link-index="${index}">
-            <input type="hidden" name="links[${index}][type]" value="${link.type}">
-            <input type="hidden" name="links[${index}][clicks]" value="${link.clicks}">
+         <div class="mb-3 p-4 border border-1 link_container" data-link-id="${link.id}">
+            <input type="hidden" name="links[${link.id}][id]" value="${link.id}">
             <div class="row mb-3">
                <label class="col-sm-3 col-form-label">Standard Link URL</label>
                <div class="col-sm-9">
-                  <input type="text" class="form-control" name="links[${index}][url]" value="${link.url}">
+                  <input type="text" class="form-control" name="links[${link.id}][url]" value="${link.url}">
                </div>
             </div>
             <div class="row mb-3">
                <label class="col-sm-3 col-form-label">Icon</label>
                <div class="col-sm-9">
-                  <input class="form-control form-control-sm" name="links[${index}][icon]" type="file">
+                  <input class="form-control form-control-sm" name="links[${link.id}][icon]" type="file">
                </div>
             </div>
             ${renderLinkButtons()}
@@ -155,13 +172,12 @@
 
    function renderVideoLink(link, index) {
       return `
-         <div class="mb-3 p-4 border border-1 link_container" data-link-index="${index}">
-            <input type="hidden" name="links[${index}][type]" value="${link.type}">
-            <input type="hidden" name="links[${index}][clicks]" value="${link.clicks}">
+         <div class="mb-3 p-4 border border-1 link_container" data-link-id="${link.id}">
+            <input type="hidden" name="links[${link.id}][id]" value="${link.id}">
             <div class="row mb-3">
                <label class="col-sm-3 col-form-label">Video Link URL</label>
                <div class="col">
-                  <input type="text" class="form-control" name="links[${index}][url]" value="${link.url}">
+                  <input type="text" class="form-control" name="links[${link.id}][url]" value="${link.url}">
                </div>
             </div>
             ${renderLinkButtons()}

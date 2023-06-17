@@ -1,50 +1,80 @@
 <?php
+
 namespace App\Controllers;
 
 use CodeIgniter\Controller;
-use App\Models\UserModel;
 use App\Helpers\LinkTreeHelper;
-use App\Models\LinkTreeModel;
+use App\Models\LinkTreeDataEntity;
 
 class LinkTreeController extends Controller
 {
+   public function __construct()
+   {
+      helper(['text', 'form']);
+   }
+
    public function index()
    {
-      log_message('error', 'getLinkTreeData');
-      helper(['form']);
-      // Get the user's linktree ID from the database
-      // Currently there's only one per user, if that changes we'll need to pass
-      // the linktree ID in the URL
-      $userLinkTreeId = (new LinkTreeModel())->where('user_id', session()->get('id'))->first()['id'];
+      $linkTree = new LinkTreeDataEntity();  
 
-      log_message('error', 'getLinkTreeData');
       $data = [
          'user' => session()->get(),
-         'linktree' => LinkTreeHelper::getLinkTreeData($userLinkTreeId),
-         'linktreeId' => $userLinkTreeId,
-         'socialKeys' => LinkTreeHelper::$social,
+         'linktree' => $linkTree->data,
+         'linktreeId' => $linkTree->linkTreeId,
+         'socialKeys' => $linkTree->social,
       ];
-      log_message('error', 'getLinkTreeData');
+
       echo view('linktree/edit', $data);
    }
 
-   public function save()
+   public function store()
    {
+      $linkTree = new LinkTreeDataEntity();
       $request = $this->request->getPost();
+      $userId = session()->get('id');
+      $linkTreeId = $request['linktree_id'];
 
-      foreach($this->request->getFiles() as $file){
-         if($file->isValid()){
-            log_message('error', $file->getName() . ' is valid');
-         }
-      }
-      if(isset($request['save'])){
-         $linkTreeId = $request['linktree_id'];
-         unset($request['save']);
-         LinkTreeHelper::saveLinkTreeData($linkTreeId, $request);
-         // return redirect()->to('/profile');
+      if (!LinkTreeHelper::isValidUserLinkTree($userId, $linkTreeId)) {
+         session()->setFlashdata('msg', 'Invalid LinkTree ID');
+         return redirect()->back();
       }
 
-      header('Content-Type: application/json');
-      echo json_encode($request);
+      // Save the avatar
+      // This could be done at the user level if needed
+      $avatar = $this->request->getFile('avatar_upload');
+      if ($avatar->isValid()) {
+         $randomName = random_string('nozero', 15);
+         $path = ROOTPATH . 'public/images/user/' . $userId;
+         $fileName = $randomName . '.' . $avatar->getExtension();
+         $avatar->move($path, $fileName, true);
+         $request['avatar'] = 'images/' . $userId . '/' . $fileName;
+      } else if (!$avatar->isValid() && $avatar->getError() !== UPLOAD_ERR_NO_FILE) {
+         session()->setFlashdata('msg', $avatar->getErrorString());
+         return redirect()->back();
+      }
+
+      $function = isset($request['preview']) ? 'preview' : 'save';
+      unset($request['preview']);
+      unset($request['save']);
+
+      $linkTree->updateData($request);
+      $linkTree->save();
+
+      if ($function === 'preview') {
+         return redirect()->to('/linktree/' . $linkTreeId);
+      } else {
+         session()->setFlashdata('msg', 'LinkTree Saved');
+         return redirect()->back();
+      }
+   }
+
+   public function update()
+   {
+      // @todo
+   }
+
+   public function destroy()
+   {
+      // @todo
    }
 }

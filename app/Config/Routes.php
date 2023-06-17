@@ -40,7 +40,11 @@ $routes->get('/logout', 'ProfileController::logout');
 // Short switching the pofile to the linktree index
 // Normally this would go to the profile index, but we can add that later if there's more a user can do on their profile
 $routes->get('/profile', 'LinkTreeController::index', ['filter' => 'authGuard']);
-$routes->post('/linktree/save', 'LinkTreeController::save', ['filter' => 'authGuard']);
+$routes->post('/linktree/save', 'LinkTreeController::store', ['filter' => 'authGuard']);
+$routes->get('/linktree/(:num)', 'LinkTreeController::show/$1');
+
+// Linktree link routes
+$routes->resource('linktree/link', ['controller' => 'LinkTreeLinkController', 'filter' => 'authGuard']);
 
 /*
  * --------------------------------------------------------------------
