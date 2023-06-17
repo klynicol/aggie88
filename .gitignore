@@ -132,7 +132,7 @@ nb-configuration.xml
 
 
 #linktrees
-writeable/linktrees/*
+writable/linktreedata/*
 
 #images
 public/images/lt/*

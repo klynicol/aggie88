@@ -5,6 +5,7 @@ namespace App\Controllers;
 use CodeIgniter\Controller;
 use App\Helpers\LinkTreeHelper;
 use App\Models\LinkTreeDataEntity;
+use CodeIgniter\Files\File;
 
 class LinkTreeController extends Controller
 {
@@ -21,10 +22,31 @@ class LinkTreeController extends Controller
          'user' => session()->get(),
          'linktree' => $linkTree->data,
          'linktreeId' => $linkTree->linkTreeId,
-         'socialKeys' => $linkTree->social,
+         'socialKeys' => LinkTreeHelper::$social,
       ];
 
       echo view('linktree/edit', $data);
+   }
+
+   public function show($id)
+   {  
+      $file = new File(WRITEPATH . 'linktreedata/' . $id . '.json');
+      if(!$file->isFile()) {
+         // respond with 404
+         throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound(
+            'LinkTree Not Found'
+         );
+      }
+
+      $data = [
+         'user' => LinkTreeHelper::getUserFromLinkTreeId($id),
+         'linktree' => json_decode($file->openFile()->fread($file->getSize()), true),
+         'socialKeys' => LinkTreeHelper::$social,
+      ];
+
+      // return $this->response->setJSON($data);
+
+      echo view('linktree/show', $data); 
    }
 
    public function store()
@@ -50,7 +72,7 @@ class LinkTreeController extends Controller
          $path = ROOTPATH . 'public/images/user/' . $userId;
          $fileName = $randomName . '.' . $avatar->getExtension();
          $avatar->move($path, $fileName, true);
-         $request['avatar'] = 'images/' . $userId . '/' . $fileName;
+         $request['avatar'] = 'images/user/' . $userId . '/' . $fileName;
       } else if (!$avatar->isValid() && $avatar->getError() !== UPLOAD_ERR_NO_FILE) {
          session()->setFlashdata('msg', $avatar->getErrorString());
          return redirect()->back();

@@ -158,6 +158,12 @@
          <div class="mb-3 p-4 border border-1 link_container" data-link-id="${link.id}">
             <input type="hidden" name="links[${link.id}][id]" value="${link.id}">
             <div class="row mb-3">
+               <label class="col-sm-3 col-form-label">Video Link Text</label>
+               <div class="col">
+                  <input type="text" class="form-control" name="links[${link.id}][text]" value="${link.text}">
+               </div>
+            </div>
+            <div class="row mb-3">
                <label class="col-sm-3 col-form-label">Standard Link URL</label>
                <div class="col-sm-9">
                   <input type="text" class="form-control" name="links[${link.id}][url]" value="${link.url}">
@@ -178,6 +184,12 @@
       return `
          <div class="mb-3 p-4 border border-1 link_container" data-link-id="${link.id}">
             <input type="hidden" name="links[${link.id}][id]" value="${link.id}">
+            <div class="row mb-3">
+               <label class="col-sm-3 col-form-label">Video Link Text</label>
+               <div class="col">
+                  <input type="text" class="form-control" name="links[${link.id}][text]" value="${link.text}">
+               </div>
+            </div>
             <div class="row mb-3">
                <label class="col-sm-3 col-form-label">Video Link URL</label>
                <div class="col">

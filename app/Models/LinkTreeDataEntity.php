@@ -5,12 +5,12 @@ namespace App\Models;
 use CodeIgniter\Files\File;
 use Config\Services;
 use App\Helpers\CommonHelper;
+use App\Helpers\LinkTreeHelper;
 
 class LinkTreeDataEntity
 {
    private $dataDir = WRITEPATH . 'linktreedata/';
    private $imageDir = ROOTPATH . 'public/images/lt/';
-   public $social = ['facebook', 'twitter', 'linkedin', 'instagram', 'youtube'];
    private $userId;
    public $linkTreeId;
    public $data;
@@ -26,6 +26,10 @@ class LinkTreeDataEntity
       $this->data = $this->getData($this->linkTreeId);
    }
 
+   /**
+    * Get the linktree data from the file system
+    * @return array
+    */
    public function getData()
    {
       $file = new File($this->dataDir . $this->linkTreeId . '.json');
@@ -41,6 +45,10 @@ class LinkTreeDataEntity
       return $this->data;
    }
 
+   /**
+    * Initialize the linktree data
+    * @return void
+    */
    private function initData()
    {
       $data = [
@@ -50,13 +58,18 @@ class LinkTreeDataEntity
          'links' => [],
       ];
 
-      foreach ($this->social as $social) {
+      foreach (LinkTreeHelper::$social as $social) {
          $data['social'][$social] = '';
       }
 
       $this->data = $data;
    }
 
+   /**
+    * Initialize a new link
+    * @param string $type
+    * @return array
+    */
    public function initLink($type)
    {
       $data = [
@@ -64,6 +77,7 @@ class LinkTreeDataEntity
          'type' => $type,
          'icon' => '',
          'url' => '',
+         'text' => '',
          'clicks' => 0,
       ];
       $this->data['links'][$data['id']] = $data;
@@ -71,6 +85,11 @@ class LinkTreeDataEntity
       return $data;
    }
 
+   /**
+    * Update the linktree data
+    * @param array $data
+    * @return void
+    */
    public function updateData($data)
    {
       if (isset($data['links']) && is_array($data['links'])) {
@@ -83,6 +102,12 @@ class LinkTreeDataEntity
       $this->data = array_merge($this->data, $data);
    }
 
+   /**
+    * Update a link
+    * @param string $linkId
+    * @param array $linkData
+    * @return void
+    */
    public function updateLink($linkId, $linkData)
    {
       log_message('debug', json_encode($linkData));
@@ -100,6 +125,11 @@ class LinkTreeDataEntity
       }
    }
 
+   /**
+    * Delete a link
+    * @param string $linkId
+    * @return void
+    */
    public function deleteLink($linkId)
    {
       if (isset($this->data['links'][$linkId])) {
@@ -108,6 +138,11 @@ class LinkTreeDataEntity
       }
    }
 
+   /**
+    * Save the link image
+    * @param string $linkId
+    * @return string|null
+    */
    private function saveLinkImage($linkId)
    {
       $path = $this->imageDir . $this->linkTreeId;
@@ -138,6 +173,11 @@ class LinkTreeDataEntity
       return 'images/lt/' . $this->linkTreeId . '/' . $fileName;
    }
 
+   /**
+    * Delete the link image
+    * @param string $linkId
+    * @return void
+    */
    private function deleteLinkImage($linkId)
    {
       if(!empty($this->data['links'][$linkId]['icon'])) {
@@ -145,6 +185,10 @@ class LinkTreeDataEntity
       }
    }
 
+   /**
+    * Save the linktree data to the file system
+    * @return void
+    */
    public function save()
    {
       $data = json_encode($this->data, JSON_PRETTY_PRINT);
