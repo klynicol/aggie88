@@ -4,7 +4,7 @@
 
 1. Make sure you  have the following:   
 github command line utility https://cli.github.com/   
-composer command line utility https://getcomposer.org/
+composer command line utility https://getcomposer.org/   
 using php 8.2.7 or above
 having basic php extensions installed
 
