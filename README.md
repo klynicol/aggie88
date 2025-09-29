@@ -1,4 +1,4 @@
-# Aggie88 (Link Tree)
+# Aggie88 (Link Tree Clone with tenant info in file->JSON format )
 
 ## Installation
 
